@@ -1,0 +1,34 @@
+type Score {
+  inning: String
+  r: Int
+  w: Int
+  o: Float
+}
+
+type Weather {
+  city: String
+  temperature: Float
+  description: String
+}
+
+type NewsArticle {
+  title: String
+  url: String
+  source: String
+  publishedAt: String
+}
+
+type Match {
+  id: String
+  name: String
+  status: String
+  score: [Score]
+  weather: Weather
+}
+
+type Query {
+  liveMatches: [Match]
+  match(matchId: String!): Match
+  weather(city: String!): Weather
+  news(query: String!): [NewsArticle]
+}

@@ -1,0 +1,7 @@
+query {
+  liveMatches {
+    id
+    name
+    status
+  }
+}

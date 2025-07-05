@@ -1,0 +1,17 @@
+query getMatch($matchId: String!) {
+  match(matchId: $matchId) {
+    name
+    status
+    score {
+      inning
+      r
+      w
+      o
+    }
+    weather {
+      city
+      temperature
+      description
+    }
+  }
+}

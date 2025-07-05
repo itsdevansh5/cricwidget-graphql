@@ -1,0 +1,7 @@
+query getWeather($city: String!) {
+  weather(city: $city) {
+    city
+    temperature
+    description
+  }
+}
