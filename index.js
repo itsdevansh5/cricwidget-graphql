@@ -27,13 +27,17 @@ const resolvers = {
   },
 };
 
-async function startServer() {
+// Export a handler for Vercel
+module.exports = async (req, res) => {
   const app = express();
-  const server = new ApolloServer({ typeDefs, resolvers });
+
+  const server = new ApolloServer({
+    typeDefs,
+    resolvers,
+  });
 
   await server.start();
 
-  // 💡 Fix: split into individual middleware lines
   app.use(cors());
   app.use(express.json());
   app.use(
@@ -47,12 +51,5 @@ async function startServer() {
     })
   );
 
-  const PORT = 4000;
-  app.listen(PORT, () => {
-    console.log(`🚀 Server ready at http://localhost:${PORT}/`);
-  });
-}
-
-startServer().catch((err) => {
-  console.error("❌ Error starting server:", err);
-});
+  return app(req, res); // 🚨 Key: forward the request to express app
+};
