@@ -2,16 +2,32 @@ const express = require("express");
 const { ApolloServer } = require("@apollo/server");
 const { expressMiddleware } = require("@apollo/server/express4");
 const { readFileSync } = require("fs");
+const path = require("path");
 const cors = require("cors");
 const dotenv = require("dotenv");
 
 dotenv.config();
 
-const matchResolver = require("./resolvers/matchResolver");
-const weatherResolver = require("./resolvers/weatherResolver");
-const newsResolver = require("./resolvers/newsResolver");
+console.log("🚧 Server initializing...");
 
-const typeDefs = readFileSync("./schema.graphql", { encoding: "utf-8" });
+// Import resolvers (with fallback logging)
+let matchResolver = {}, weatherResolver = {}, newsResolver = {};
+try {
+  matchResolver = require("./resolvers/matchResolver");
+  weatherResolver = require("./resolvers/weatherResolver");
+  newsResolver = require("./resolvers/newsResolver");
+  console.log("✅ Resolvers loaded");
+} catch (err) {
+  console.error("❌ Error loading resolvers:", err);
+}
+
+let typeDefs = "";
+try {
+  typeDefs = readFileSync(path.join(__dirname, "schema.graphql"), "utf-8");
+  console.log("✅ Schema loaded");
+} catch (err) {
+  console.error("❌ Error loading schema.graphql:", err);
+}
 
 const resolvers = {
   Query: {
@@ -22,23 +38,35 @@ const resolvers = {
 };
 
 module.exports = async (req, res) => {
-  const app = express();
-  const server = new ApolloServer({ typeDefs, resolvers });
-  await server.start();
+  try {
+    const app = express();
 
-  app.use(cors());
-  app.use(express.json());
+    const server = new ApolloServer({ typeDefs, resolvers });
+    await server.start();
+    console.log("✅ Apollo Server started");
 
-  app.use(
-    "/",
-    expressMiddleware(server, {
-      context: async () => ({
-        CRICAPI_KEY: process.env.CRICAPI_KEY,
-        OPENWEATHER_KEY: process.env.OPENWEATHER_KEY,
-        NEWSAPI_KEY: process.env.NEWSAPI_KEY,
-      }),
-    })
-  );
+    app.use(cors());
+    app.use(express.json());
 
-  return app(req, res); // 💡 Important: this replaces app.listen()
+    app.use(
+      "/",
+      expressMiddleware(server, {
+        context: async () => {
+          console.log("⚙️ Context loading...");
+          return {
+            CRICAPI_KEY: process.env.CRICAPI_KEY || "undefined",
+            OPENWEATHER_KEY: process.env.OPENWEATHER_KEY || "undefined",
+            NEWSAPI_KEY: process.env.NEWSAPI_KEY || "undefined",
+          };
+        },
+      })
+    );
+
+    console.log("🚀 Sending to express app...");
+    return app(req, res);
+  } catch (err) {
+    console.error("❌ Server crashed:", err);
+    res.statusCode = 500;
+    res.end("Internal server error");
+  }
 };
