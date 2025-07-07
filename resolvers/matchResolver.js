@@ -1,3 +1,4 @@
+//comment
 const fetch = require("node-fetch");
 
 async function getWeather(city, apiKey) {
